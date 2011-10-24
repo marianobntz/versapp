@@ -1,0 +1,13 @@
+{% extends 'en/html/base_.html' %}
+
+{% block __Title %}Home{% endblock %}
+
+{% block __Description %}Testing new home{% endblock %}
+
+{% block body %}
+{{ Description }}
+<h1>Helllo!</h1>
+<a href="{{ uri_for('index') }}">{ % url_title home % }</a>
+{{ uri_for('rtf.css') }}<br/>
+{{ uri_for('index', _full=true) }} - directory handler<br/>
+{% endblock %}

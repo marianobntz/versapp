@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id: sitemap.xml 755 2010-06-06 01:08:22Z mariano $ -->
+<!-- Application: {{ FullVersion }} -->
+<urlset
+	xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+	xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+{% for entry in entries %}
+<url>
+	<loc>{{ host_url }}{{ entry.0 }}</loc>
+	<lastmod>{{ entry.1 }}</lastmod>
+	<priority>{{ entry.2 }}</priority>
+	{% if entry.3 %}
+	<image:image>
+		<image:loc>{{ host_url }}{{ entry.3 }}</image:loc>
+	</image:image>
+	{% endif %}
+</url>
+{% endfor %}
+</urlset>
