@@ -82,6 +82,7 @@ class Route(webapp2.Route):
 		self.content_type = kw.pop("content_type", "text/html")
 		self.in_sitemap = kw.pop("in_sitemap", False)
 		self.sitemap_args = kw.pop("sitemap_args", None)
+		self.lastmod_group = kw.pop("lastmod_group", "default")
 		self.defaults.update(kw)
 	#
 	def build_response(self, body=None, unicode_body=None):
@@ -99,11 +100,15 @@ class Route(webapp2.Route):
 	# 
 	def get_sitemap_args(self):
 		if not self.sitemap_args:
-			return [([], {})]
+			return [([], {}, 0)]
 		elif callable(self.sitemap_args):
 			return self.sitemap_args()
 		else:
 			return self.sitemap_args
+	#
+	def get_last_modified(self, path):
+		import datetime
+		return datetime.datetime.now().strftime("%Y-%m-%d")
 #
 class FileRoute(Route):
 	"""A Route based on rendering a file.
