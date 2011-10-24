@@ -1,0 +1,50 @@
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<meta http-equiv="Content-Script-Type" content="text/javascript"/>
+		<meta http-equiv="Content-Style-Type" content="text/css"/>
+		<meta http-equiv="Content-Language" content="{{ Language }}"/>
+
+		{% if Title %}
+		<title>{{ MetaTitle|default(Title) }} | Regal&aacute; tu foto</title>
+		{% block meta_title %}
+		<meta name="title" content="{{ MetaTitle|default(Title) }}"/>
+		<meta property="og:title" content="{{ MetaTitle|default(Title) }}"/>
+		{% endblock meta_title %}
+		{% endif %}
+
+		{% block meta_description %}{% if Description %}
+		<meta name="description" content="{{ Description }}"/>
+		<meta property="og:description" content="{{ Description }}"/>
+		{% endif %}
+		{% endblock meta_description %}
+
+		{% if meta_page_image %}
+		<link rel="image_src" href='{{ host_url }}{{ meta_page_image }}' />
+		<meta property="og:image" content="{{ host_url }}{{ meta_page_image }}"/>
+		{% endif %}
+
+		{% block meta_page_url %}{% if meta_page_url %}
+		<link rel="canonical" href='{{ meta_page_url }}' />
+		<meta property="og:url" content="{{ meta_page_url }}"/>
+		{% endif %}
+		{% endblock meta_page_url %}
+
+		{% block meta_page_medium %}{% if meta_page_medium %}
+		<meta name="medium" content="{{ meta_page_medium }}"/>
+		{% endif %}
+		{% endblock meta_page_medium %}
+
+		{% block meta_page_type %}
+		<meta property="og:type" content="{{ meta_page_type }}"/>
+		{% endblock meta_page_type %}
+
+		<link type="text/css" rel="stylesheet" media="screen" href="{{ uri_for('rtf.css', _netloc=css_netloc ) }}"/>
+
+		{% block meta_tags %}{% endblock %}
+
+	</head>
+	<body>
+		{% block body %}{% endblock %}
+	</body>
+</html>

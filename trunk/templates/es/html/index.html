@@ -1,0 +1,23 @@
+{% set Title = 'Casados' %}
+{% set Description = 'Probando la Casa Nueva' %}
+{% set meta_page_url = uri_for(route_name, _netloc=canonical_netloc ) %}
+{% set meta_page_type = 'website' %}
+
+{% extends "es/html/base_.html" %}
+
+
+{% block body %}
+<h1>Holaa! {{ Title }}</h1>
+<h2>{{ Description }}</h2>
+
+<a href="/_ah/admin">Admin</a><br/>
+<a href="{{ uri_for('sitemap') }}">Sitemap</a><br/>
+
+<a href="{{ uri_for(route_name, _netloc=canonical_netloc ) }}">{{ uri_for(route_name, _netloc=canonical_netloc ) }}</a><br/>
+
+<a href="{{ uri_for('rtf.css') }}">{{ uri_for('rtf.css') }}</a><br/>
+
+{{ uri_for('index', _full=true) }} - directory handler<br/>
+<br/>
+<a href="{{ uri_for('modelo', id='00001' ) }}">Modelo AA</a>
+{% endblock %}

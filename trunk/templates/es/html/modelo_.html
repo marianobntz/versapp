@@ -1,0 +1,18 @@
+{% set Title = 'Casados' %}
+{% set Description = 'Probando la Casa Nueva' %}
+{% set meta_page_url = uri_for(route_name, id=id, _netloc=canonical_netloc ) %}
+{% set meta_page_type = 'article' %}
+
+{% extends "es/html/base_.html" %}
+
+{% block body %}
+		<h1>Hola! {{ id }}</h1>
+		<h2>{{ PEPE }}</h2>
+		{% block __Title %}Genioaasaaaaaaasdasdadsddd
+		sdadsad
+		
+		gggasd{% endblock %}{{ id }}
+		{% set model = get_model('id') %}
+		<br/>
+		{{ model.name }} - {{ uri_for('modelos', id='id',_full=true) }} - directory handler<br/>
+{% endblock %}
