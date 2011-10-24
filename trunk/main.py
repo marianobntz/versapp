@@ -54,14 +54,24 @@ class SitemapHandler(versapp.TemplateHandler):
 		entries = []
 		for r in routes:
 			if r.in_sitemap:
-				entries.append((r.build(self.request, [], {'_full': True}), 'aaa'))
+				for args, kwargs in r.get_sitemap_args():
+					kwargs['_full'] = True
+					loc = r.build(self.request, args, kwargs) 
+					entries.append((loc, 'aaa'))
 		m_a = self.mapping_args
 		m_a['entries'] = entries
 		return m_a
+		
+models = [([], {'id': '00001'}), ([], {'id': '00002'})]
+def albums():
+	return [([], {'id': 'mickey-mouse'}), ([], {'id': 'disney'})]
 routes = [
 	versapp.new_route(versapp.StaticHandler, '/favicon.ico', name="favicon.ico", template_file='static/external/favicon.ico'),
 	versapp.new_route(versapp.TemplateHandler, '/css/rtf-<Revision:\d\d\d\d\d>.css', name='rtf.css', template_file='base/css/rtf.css', versioned_arg="Revision"),
-	versapp.new_route(versapp.TemplateHandler, '/modelos/<id:\d\d\d\d\d>', name='modelo', template_format='%(Language)s/html/modelo_.html'),
+
+	versapp.new_route(versapp.TemplateHandler, '/modelos/<id:\d\d\d\d\d>', name='modelo', template_format='%(Language)s/html/modelo_.html', in_sitemap=True, sitemap_args=models),
+	versapp.new_route(versapp.TemplateHandler, '/albums/<id>', name='album', template_format='%(Language)s/html/album_.html', in_sitemap=True, sitemap_args=albums),
+
 	versapp.new_route(SitemapHandler, '/sitemap.xml', name='sitemap', template_file='sitemap.xml'),
 	versapp.new_route(versapp.StaticHandler, '/images/<image>', name="images", template_file="kk", build_only='true'),
 ]
