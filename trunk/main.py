@@ -54,17 +54,19 @@ class SitemapHandler(versapp.TemplateHandler):
 		entries = []
 		for r in routes:
 			if r.in_sitemap:
-				for args, kwargs in r.get_sitemap_args():
+				for args, kwargs, priority in r.get_sitemap_args():
+					loc = r.build(self.request, args, dict(kwargs))
+					lastmod = r.get_last_modified(loc)
 					kwargs['_full'] = True
-					loc = r.build(self.request, args, kwargs) 
-					entries.append((loc, 'aaa'))
+					loc = r.build(self.request, args, dict(kwargs))
+					entries.append((loc, lastmod, priority))
 		m_a = self.mapping_args
 		m_a['entries'] = entries
 		return m_a
 		
-models = [([], {'id': '00001'}), ([], {'id': '00002'})]
+models = [(['aaaa'], {'id': '00001'}, 1), ([], {'id': '00002'},1)]
 def albums():
-	return [([], {'id': 'mickey-mouse'}), ([], {'id': 'disney'})]
+	return [([], {'id': 'mickey-mouse'},3), ([], {'id': 'disney'},2)]
 routes = [
 	versapp.new_route(versapp.StaticHandler, '/favicon.ico', name="favicon.ico", template_file='static/external/favicon.ico'),
 	versapp.new_route(versapp.TemplateHandler, '/css/rtf-<Revision:\d\d\d\d\d>.css', name='rtf.css', template_file='base/css/rtf.css', versioned_arg="Revision"),

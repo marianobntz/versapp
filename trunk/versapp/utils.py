@@ -87,9 +87,19 @@ def walk_tree(root):
 	return result
 #
 class Response_Data(db.Model):
+	group = db.StringProperty()
 	path = db.StringProperty()
 	eTag = db.StringProperty()
 	lastModified = db.DateTimeProperty()
+	#
+	@classmethod
+	def get_data(cls, group):
+		data = []
+		q = db.Query(Response_Data).filter("group =", group)
+		for r in q:
+			data.append((r.path, r.eTag, r.lastModified))
+		return data
+		
 #
 def get_response_data(response):
 	data_key_str = response.path
