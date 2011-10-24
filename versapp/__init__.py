@@ -81,6 +81,7 @@ class Route(webapp2.Route):
 		self.cache_control = kw.pop("cache_control", DEFAULT_CACHE_CONTROL)
 		self.content_type = kw.pop("content_type", "text/html")
 		self.in_sitemap = kw.pop("in_sitemap", False)
+		self.sitemap_args = kw.pop("sitemap_args", None)
 		self.defaults.update(kw)
 	#
 	def build_response(self, body=None, unicode_body=None):
@@ -95,6 +96,14 @@ class Route(webapp2.Route):
 			r.md5_etag()
 		#
 		return r
+	# 
+	def get_sitemap_args(self):
+		if not self.sitemap_args:
+			return [([], {})]
+		elif callable(self.sitemap_args):
+			return self.sitemap_args()
+		else:
+			return self.sitemap_args
 #
 class FileRoute(Route):
 	"""A Route based on rendering a file.
