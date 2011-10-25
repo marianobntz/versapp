@@ -1,0 +1,17 @@
+#summary Record of the design decisions made for this app.
+#labels Phase-Design,Featured
+
+= Response Headers =
+
+For simplicity we decided to use *eTag* as the validator and *max-age* as the refresh information. 
+
+We discarded _Last-Modified_ because it would force us to keep the date for every page, plus the variations of language, etc. 
+We discarded _Expires_ because it is simpler to just include the seconds, than calculate every time.
+
+
+= Details =
+
+Add your content here.  Format your content with:
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
