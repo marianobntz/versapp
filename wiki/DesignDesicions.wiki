@@ -8,6 +8,13 @@ For simplicity we decided to use *eTag* as the validator and *max-age* as the re
 We discarded _Last-Modified_ because it would force us to keep the date for every page, plus the variations of language, etc. 
 We discarded _Expires_ because it is simpler to just include the seconds, than calculate every time.
 
+= Multi-Language support =
+
+it is based on the server host, the _HTTP_X_APPENGINE_COUNTRY_ environment var,  a cookie or a query param.
+
+= Canonical URIs =
+
+It is a good practice to include the rel="canonical" header, but we need to know the canonical network location, so we decided to accept the *_canonical_netloc* config parameter, and enhance the _uri_for_ method to accept the *_canonical* argument to use that network location.
 
 = Details =
 
