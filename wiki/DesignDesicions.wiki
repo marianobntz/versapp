@@ -22,9 +22,6 @@ it is based on the server host, the _HTTP_X_APPENGINE_COUNTRY_ environment var, 
 
 It is a good practice to include the rel="canonical" header, but we need to know the canonical network location, so we decided to accept the *_canonical_netloc* config parameter, and enhance the _uri_for_ method to accept the *_canonical* argument to use that network location.
 
-= Details =
+= Jinja = 
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+*trim_blocks* to remove new lines
