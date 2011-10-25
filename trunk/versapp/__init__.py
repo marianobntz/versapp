@@ -13,6 +13,7 @@
 """
 import os
 import logging
+import datetime
 import re
 import webob
 import webapp2
@@ -21,11 +22,14 @@ import jinja2
 from webapp2_extras import jinja2 as jinja2e
 from utils import *
 
+
 DEFAULT_LANGUAGE = APP_LANGUAGE_DEFAULT
 # DEFAULT_CACHE_CONTROL = "public, max-age=31536000"  # 1 year (365 * 86400)
 DEFAULT_CACHE_CONTROL = "no-cache"
 NO_CACHE = "no-cache"
-
+CC_NO_CACHE = "no-cache"
+CC_PUBLIC = lambda max_age: "public, max-age=%s" % max_age
+day = 24*60*60
 
 class WSGIApplication(webapp2.WSGIApplication):
 	def __init__(self, *args, **kwargs):
@@ -43,11 +47,21 @@ class WSGIApplication(webapp2.WSGIApplication):
 
 		return rv
 #
+def uri_for(_name, _request=None, *args, **kwargs):
+	if kwargs.pop('_canonical', False):
+		request = _request or webapp2.get_request()
+		kwargs['_netloc'] = request.app.config.get('_canonical_netloc', request.host)
+		# no need to change the _scheme yet...
+	return webapp2.uri_for(_name, _request, *args, **kwargs)
+#
 def initialize(template_path, *args, **kwargs):
-	jinja2_globals = {'uri_for': webapp2.uri_for }
-	if kwargs.get('globals'):
-		jinja2_globals.update(kwargs['globals'])
-		del kwargs['globals']
+	"""Initialize arguments
+	_canonical_netloc: network location for "canonical" uris
+	""" 
+	jinja2_globals = {
+		'uri_for': uri_for,
+	}
+	jinja2_globals.update(kwargs.pop('globals', {}))
 	jinja2e.default_config = {
 		'template_path': template_path, 
 		'compiled_path': None,
@@ -68,6 +82,24 @@ class Response(webapp2.Response):
 		self.last_modified = get_set_response_data('path', self.eTag)
 		
 		
+class RoutesGroup(object):
+	"""Contains response information of routes and paths grouped by a key
+	"""
+	__cache__ = {}
+	def __init__(self, key):
+		self.key = key
+	@classmethod
+	def find(cls, key):
+		# we assume only one app per class, we could separate it, but the point is that there is still one datastore....
+		result = cls.__cache__.get(key, None)
+		if not result:
+			result = cls(key)
+			cls.__cache__[key] = result
+		return result
+	@cached_property()
+	def routes(self):
+		logging.error("retrieving routes for %s" % self.key)
+		return {}
 class Route(webapp2.Route):
 	"""The Route object contains all configuration information about the route.
 
@@ -82,7 +114,7 @@ class Route(webapp2.Route):
 		self.content_type = kw.pop("content_type", "text/html")
 		self.in_sitemap = kw.pop("in_sitemap", False)
 		self.sitemap_args = kw.pop("sitemap_args", None)
-		self.lastmod_group = kw.pop("lastmod_group", "default")
+		self.routes_group = RoutesGroup.find(kw.pop("routes_group", "default"))
 		self.defaults.update(kw)
 	#
 	def build_response(self, body=None, unicode_body=None):
@@ -107,8 +139,11 @@ class Route(webapp2.Route):
 			return self.sitemap_args
 	#
 	def get_last_modified(self, path):
-		import datetime
-		return datetime.datetime.now().strftime("%Y-%m-%d")
+		r = self.routes_group.routes
+		if r.get(path):
+			return r[path]
+		else:
+			return datetime.datetime.now().strftime("%Y-%m-%d")
 #
 class FileRoute(Route):
 	"""A Route based on rendering a file.

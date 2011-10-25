@@ -9,25 +9,31 @@ import webapp2
 import jinja2
 import versapp
 from versapp.utils import walk_tree
+from google.appengine.api import app_identity
 
-HOST = os.environ['HTTP_HOST']
-CDN1_HOST = "cdn1.%s" % os.environ['HTTP_HOST']
-CDN2_HOST = "cdn2.%s" % os.environ['HTTP_HOST']
 IS_GOOGLE = os.environ.get('SERVER_SOFTWARE','').lower().startswith('google')
 IS_DEVELOPMENT = not IS_GOOGLE
+
+HOST = os.environ['HTTP_HOST']
+WWW_HOST = "www.%s" % app_identity.get_default_version_hostname() if IS_GOOGLE else None
+CDN1_HOST = "cdn1.%s" % app_identity.get_default_version_hostname() if IS_GOOGLE else None
+CDN2_HOST = "cdn2.%s" % app_identity.get_default_version_hostname() if IS_GOOGLE else None
+PAGES_CC = versapp.CC_PUBLIC(max_age=versapp.day) if IS_GOOGLE else versapp.CC_NO_CACHE
 
 def get_model(id):
 	logging.error(id)
 	return {'id': id, 'name': 'nn'+id }
 global_map = {
 	'get_model': get_model,
-	'canonical_netloc': 'localhost:8080',
-	'css_netloc': HOST if IS_DEVELOPMENT else CDN1_HOST,
-	'img_netloc': HOST if IS_DEVELOPMENT else CDN2_HOST,
+	'_canonical_netloc': WWW_HOST or HOST,
+	'css_netloc': CDN1_HOST or HOST,
+	'img_netloc': CDN2_HOST or HOST,
 }
-
+app_config = {
+	'_canonical_netloc': WWW_HOST or HOST,
+}
 templates_path = 'templates'
-app = versapp.initialize(template_path=templates_path, debug=True, globals=global_map)
+app = versapp.initialize(template_path=templates_path, debug=True, globals=global_map, config=app_config)
 
 def build_html_template_routes():
 	routes = []
@@ -45,7 +51,7 @@ def build_html_template_routes():
 		if template.endswith("index"):
 			template = template[:-5]
 		template_format = "%(Language)s/html/" + path
-		route = versapp.new_route(versapp.TemplateHandler, template, template_format=template_format, name=name, in_sitemap=True)
+		route = versapp.new_route(versapp.TemplateHandler, template, template_format=template_format, name=name, in_sitemap=True, cache_control=PAGES_CC)
 		routes.append(route)
 	return routes
 #
@@ -71,8 +77,8 @@ routes = [
 	versapp.new_route(versapp.StaticHandler, '/favicon.ico', name="favicon.ico", template_file='static/external/favicon.ico'),
 	versapp.new_route(versapp.TemplateHandler, '/css/rtf-<Revision:\d\d\d\d\d>.css', name='rtf.css', template_file='base/css/rtf.css', versioned_arg="Revision"),
 
-	versapp.new_route(versapp.TemplateHandler, '/modelos/<id:\d\d\d\d\d>', name='modelo', template_format='%(Language)s/html/modelo_.html', in_sitemap=True, sitemap_args=models),
-	versapp.new_route(versapp.TemplateHandler, '/albums/<id>', name='album', template_format='%(Language)s/html/album_.html', in_sitemap=True, sitemap_args=albums),
+	versapp.new_route(versapp.TemplateHandler, '/modelos/<id:\d\d\d\d\d>', name='modelo', template_format='%(Language)s/html/modelo_.html', in_sitemap=True, sitemap_args=models, routes_group="models", cache_control=PAGES_CC),
+	versapp.new_route(versapp.TemplateHandler, '/albums/<id>', name='album', template_format='%(Language)s/html/album_.html', in_sitemap=True, sitemap_args=albums, routes_group="albums", cache_control=PAGES_CC),
 
 	versapp.new_route(SitemapHandler, '/sitemap.xml', name='sitemap', template_file='sitemap.xml'),
 	versapp.new_route(versapp.StaticHandler, '/images/<image>', name="images", template_file="kk", build_only='true'),

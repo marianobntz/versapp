@@ -124,3 +124,26 @@ class Versioned_Files(db.Model):
 		r = q.get()
 		return r.content if r else None
 #
+class cached_property(object):
+	def __call__(self, func, doc=None):
+		self.func = func
+		self.__doc__ = doc or func.__doc__
+		self.__name__ = func.__name__
+		self.__module__ = func.__module__
+		return self
+	def __get__(self, inst, owner):
+		try:
+			value = inst._cache[self.__name__]
+		except (KeyError, AttributeError):
+			value = self.func(inst)
+			try:
+				cache = inst._cache
+			except AttributeError:
+				cache = inst._cache = {}
+				cache[self.__name__] = value
+		return value
+	# def __del__(self=None,inst=None, owner=None):
+	# 	logging.error('aaaa')
+	# 	logging.error(self)
+	# 	inst._cache.pop(self.__name__, None)
+#
