@@ -63,7 +63,7 @@ def initialize(template_path, *args, **kwargs):
 		'filters': None,
 		'force_compiled': False,
 		'globals': jinja2_globals, 
-		'environment_args': {'autoescape': True, 'extensions': ['jinja2.ext.autoescape', 'jinja2.ext.with_']}, 
+		'environment_args': {'autoescape': True, 'trim_blocks': True, 'extensions': ['jinja2.ext.autoescape', 'jinja2.ext.with_']}, 
 	}
 	return WSGIApplication(*args, **kwargs)
 #
