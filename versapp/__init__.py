@@ -24,11 +24,9 @@ from utils import *
 
 
 DEFAULT_LANGUAGE = APP_LANGUAGE_DEFAULT
-# DEFAULT_CACHE_CONTROL = "public, max-age=31536000"  # 1 year (365 * 86400)
-DEFAULT_CACHE_CONTROL = "no-cache"
-NO_CACHE = "no-cache"
 CC_NO_CACHE = "no-cache"
 CC_PUBLIC = lambda max_age: "public, max-age=%s" % max_age
+CC_PRIVATE = lambda max_age: "private, max-age=%s" % max_age
 day = 24*60*60
 year = 365*day
 

@@ -26,7 +26,6 @@ def get_model(id):
 	return {'id': id, 'name': 'nn'+id }
 global_map = {
 	'get_model': get_model,
-	'_canonical_netloc': WWW_HOST or HOST,
 	'css_netloc': CDN1_HOST or HOST,
 	'img_netloc': CDN2_HOST or HOST,
 }
@@ -35,6 +34,7 @@ app_config = {
 	'default_cache_control': DEFAULT_CC,
 }
 templates_path = 'templates'
+static_path = 'static'
 app = versapp.initialize(template_path=templates_path, debug=True, globals=global_map, config=app_config)
 
 def build_html_template_routes():
@@ -57,6 +57,17 @@ def build_html_template_routes():
 		routes.append(route)
 	return routes
 #
+def build_webmaster_routes():
+	routes = []
+	sources_path = os.path.join(static_path, 'webmaster')
+	base_paths = walk_tree(sources_path)
+	for path in base_paths:
+		template = "/" + path
+		template_file = os.path.join(sources_path, path)
+		route = versapp.new_route(versapp.StaticHandler, template, template_file=template_file, name=path)
+		routes.append(route)
+	return routes
+#
 models = [(['aaaa'], {'id': '00001'}, 1), ([], {'id': '00002'},1)]
 def albums():
 	return [([], {'id': 'mickey-mouse'},3), ([], {'id': 'disney'},2)]
@@ -67,11 +78,12 @@ routes = [
 	versapp.new_route(versapp.TemplateHandler, '/modelos/<id:\d\d\d\d\d>', name='modelo', template_format='%(Language)s/html/modelo_.html', in_sitemap=True, sitemap_args=models, cache_control=PAGES_CC),
 	versapp.new_route(versapp.TemplateHandler, '/albums/<id>', name='album', template_format='%(Language)s/html/album_.html', in_sitemap=True, sitemap_args=albums, cache_control=PAGES_CC),
 
-	versapp.new_route(versapp.TemplateHandler, '/sitemap.xml', name='sitemap', template_file='sitemap.xml'),
+	versapp.new_route(versapp.TemplateHandler, '/sitemap.xml', name='sitemap', template_file='sitemap.xml', cache_control=versapp.CC_NO_CACHE),
 	versapp.new_route(versapp.StaticHandler, '/images/<image>', name="images", template_file="kk", build_only='true'),
 ]
 
 routes.extend(build_html_template_routes())
+routes.extend(build_webmaster_routes())
 for r in routes:
 	app.router.add(r)
 
