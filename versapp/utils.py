@@ -4,6 +4,8 @@
 #
 import os
 import logging
+import datetime
+import webapp2
 #
 from google.appengine.api import memcache
 from google.appengine.ext import db
@@ -86,25 +88,6 @@ def walk_tree(root):
 	result.sort()
 	return result
 #
-class Response_Data(db.Model):
-	group = db.StringProperty()
-	path = db.StringProperty()
-	eTag = db.StringProperty()
-	lastModified = db.DateTimeProperty()
-	#
-	@classmethod
-	def get_data(cls, group):
-		data = []
-		q = db.Query(Response_Data).filter("group =", group)
-		for r in q:
-			data.append((r.path, r.eTag, r.lastModified))
-		return data
-		
-#
-def get_response_data(response):
-	data_key_str = response.path
-	data_key = db.Key.from_path(Response_Data.kind(), data_key_str)
-#
 class Versioned_Files(db.Model):
 	template_file = db.StringProperty()
 	file_version = db.StringProperty()
@@ -146,4 +129,42 @@ class cached_property(object):
 	# 	logging.error('aaaa')
 	# 	logging.error(self)
 	# 	inst._cache.pop(self.__name__, None)
+#
+class Sitemap_Data(db.Model):
+	loc = db.StringProperty()
+	etag = db.StringProperty()
+	last_modified = db.DateTimeProperty()
+	#
+	@classmethod
+	def get_data(cls, group):
+		data = []
+		q = db.Query(Response_Data).filter("group =", group)
+		for r in q:
+			data.append((r.path, r.eTag, r.lastModified))
+		return data
+		
+#
+def get_response_data(response):
+	data_key_str = response.path
+	data_key = db.Key.from_path(Response_Data.kind(), data_key_str)
+#
+def sitemap_entries():
+	result = []
+	app = webapp2.get_app()
+	request = webapp2.get_request()
+	#
+	now = datetime.datetime.now().strftime("%Y-%m-%d")
+	sitemap_data = {}
+	for d in Sitemap_Data.all():
+		sitemap_data[d.loc] = d.last_modified
+	#
+	for r in app.router.match_routes:
+		if not r.in_sitemap:
+			continue
+		for args, kwargs, priority in r.get_sitemap_args():
+			kwargs['_canonical'] = True
+			loc = r.build(request, args, dict(kwargs))
+			lastmod = sitemap_data.get(loc, now)
+			result.append((loc, lastmod, priority))
+	return result
 #

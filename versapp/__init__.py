@@ -30,6 +30,7 @@ NO_CACHE = "no-cache"
 CC_NO_CACHE = "no-cache"
 CC_PUBLIC = lambda max_age: "public, max-age=%s" % max_age
 day = 24*60*60
+year = 365*day
 
 class WSGIApplication(webapp2.WSGIApplication):
 	def __init__(self, *args, **kwargs):
@@ -47,19 +48,13 @@ class WSGIApplication(webapp2.WSGIApplication):
 
 		return rv
 #
-def uri_for(_name, _request=None, *args, **kwargs):
-	if kwargs.pop('_canonical', False):
-		request = _request or webapp2.get_request()
-		kwargs['_netloc'] = request.app.config.get('_canonical_netloc', request.host)
-		# no need to change the _scheme yet...
-	return webapp2.uri_for(_name, _request, *args, **kwargs)
-#
 def initialize(template_path, *args, **kwargs):
 	"""Initialize arguments
 	_canonical_netloc: network location for "canonical" uris
 	""" 
 	jinja2_globals = {
-		'uri_for': uri_for,
+		'uri_for': webapp2.uri_for,
+		'sitemap_entries': sitemap_entries,
 	}
 	jinja2_globals.update(kwargs.pop('globals', {}))
 	jinja2e.default_config = {
@@ -82,24 +77,6 @@ class Response(webapp2.Response):
 		self.last_modified = get_set_response_data('path', self.eTag)
 		
 		
-class RoutesGroup(object):
-	"""Contains response information of routes and paths grouped by a key
-	"""
-	__cache__ = {}
-	def __init__(self, key):
-		self.key = key
-	@classmethod
-	def find(cls, key):
-		# we assume only one app per class, we could separate it, but the point is that there is still one datastore....
-		result = cls.__cache__.get(key, None)
-		if not result:
-			result = cls(key)
-			cls.__cache__[key] = result
-		return result
-	@cached_property()
-	def routes(self):
-		logging.error("retrieving routes for %s" % self.key)
-		return {}
 class Route(webapp2.Route):
 	"""The Route object contains all configuration information about the route.
 
@@ -110,23 +87,25 @@ class Route(webapp2.Route):
     
 	def __init__(self, template=None, handler=None, name=None, **kw):
 		super(Route, self).__init__(template, handler=handler, name=name, build_only=kw.pop("build_only", None), defaults=kw.pop("defaults", None), methods=kw.pop("methods", ('GET', 'HEAD')), schemes=kw.pop("schemes", None))
-		self.cache_control = kw.pop("cache_control", DEFAULT_CACHE_CONTROL)
+		self.cache_control = kw.pop("cache_control", None)
 		self.content_type = kw.pop("content_type", "text/html")
 		self.in_sitemap = kw.pop("in_sitemap", False)
 		self.sitemap_args = kw.pop("sitemap_args", None)
-		self.routes_group = RoutesGroup.find(kw.pop("routes_group", "default"))
 		self.defaults.update(kw)
 	#
 	def build_response(self, body=None, unicode_body=None):
 		r = webapp2.Response()
-		r.cache_control = self.cache_control
+
+		r.cache_control = self.cache_control or webapp2.get_app().config.get('default_cache_control', CC_NO_CACHE)
 		r.content_type = self.content_type
+
 		if body:
 			r.body = body
 		if unicode_body:
 			r.unicode_body = unicode_body
-		if r.cache_control != NO_CACHE:
-			r.md5_etag()
+			
+		r.md5_etag() # we always send the eTag so we can work with conditional responses
+		r.conditional_response = True # revisar si podemos tocarlo esto
 		#
 		return r
 	# 
@@ -138,12 +117,15 @@ class Route(webapp2.Route):
 		else:
 			return self.sitemap_args
 	#
-	def get_last_modified(self, path):
-		r = self.routes_group.routes
-		if r.get(path):
-			return r[path]
-		else:
-			return datetime.datetime.now().strftime("%Y-%m-%d")
+	def build(self, request, args, kwargs):
+		if kwargs.pop('_canonical', False):
+			_netloc = webapp2.get_app().config.get('_canonical_netloc', None)
+			if _netloc:
+				kwargs['_netloc'] = _netloc
+			else:
+				kwargs['_full'] = True
+			# no need to change the _scheme yet...
+		return super(Route, self).build(request, args, kwargs)
 #
 class FileRoute(Route):
 	"""A Route based on rendering a file.
