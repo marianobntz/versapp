@@ -1,14 +1,14 @@
 {# $Id$ #}
-{% set Title = 'Casados' %}
-{% set Description = 'Probando la Casa Nueva' %}
+{% set Title = 'Indice' %}
+{% set Description = 'Sitio nuevo' %}
 {% set meta_page_url = uri_for(route_name, _canonical=True) %}
 {% set meta_page_type = 'website' %}
-{% extends "es/html/base_.html" %}
+{% extends "base/html/base_.html" %}
 {% block body %}
 <h1>Holaa! {{ Title }}</h1>
 <h2>{{ Description }}</h2>
 
-<a href="/_ah/admin">Admin</a><br/>
+<a href="/_ah/admin">Local Admin</a><br/>
 <a href="{{ uri_for('sitemap') }}">Sitemap</a><br/>
 
 <a href="{{ uri_for(route_name, _netloc=canonical_netloc ) }}">{{ uri_for(route_name, _netloc=canonical_netloc ) }}</a><br/>
@@ -17,5 +17,6 @@
 
 {{ uri_for('index', _full=true) }} - directory handler<br/>
 <br/>
+<a href="{{ uri_for('modelos') }}">Modelos</a><br/>
 <a href="{{ uri_for('modelo', id='00001' ) }}">Modelo AA</a>
 {% endblock %}
