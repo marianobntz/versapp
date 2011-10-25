@@ -1,6 +1,6 @@
 {% set Title = 'Casados' %}
 {% set Description = 'Probando la Casa Nueva' %}
-{% set meta_page_url = uri_for(route_name, _netloc=canonical_netloc ) %}
+{% set meta_page_url = uri_for(route_name, _canonical=True) %}
 {% set meta_page_type = 'website' %}
 
 {% extends "es/html/base_.html" %}
