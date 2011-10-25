@@ -1,6 +1,10 @@
 #summary Record of the design decisions made for this app.
 #labels Phase-Design,Featured
 
+= Sitemap =
+
+The sitemap is part of the framework, and each route defines an *in_sitemap* attribute, plus a *sitemap_args* used to retrieve the list of arguments used to build the sitemap uris.
+
 = Response Headers =
 
 For simplicity we decided to use *eTag* as the validator and *max-age* as the refresh information. 
