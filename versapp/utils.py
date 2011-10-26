@@ -82,6 +82,8 @@ def walk_tree(root):
 	result = []
 	for base, dirs, files in os.walk(root):
 		base_prefix = "" if root == base else base[len(root)+1:]
+		if base_prefix.startswith('.svn'): # remove normal VCS files!
+			continue
 		for f in files:
 			path = os.path.join(base_prefix, f)
 			result.append(path)
@@ -130,41 +132,25 @@ class cached_property(object):
 	# 	logging.error(self)
 	# 	inst._cache.pop(self.__name__, None)
 #
-class Sitemap_Data(db.Model):
-	loc = db.StringProperty()
-	etag = db.StringProperty()
-	last_modified = db.DateTimeProperty()
-	#
-	@classmethod
-	def get_data(cls, group):
-		data = []
-		q = db.Query(Response_Data).filter("group =", group)
-		for r in q:
-			data.append((r.path, r.eTag, r.lastModified))
-		return data
-		
-#
+# class Sitemap_Data(db.Model):
+# 	loc = db.StringProperty()
+# 	etag = db.StringProperty()
+# 	last_modified = db.DateProperty(auto_now=True)
+# 	#
+# 	@classmethod
+# 	def get_data(cls, group):
+# 		data = []
+# 		q = db.Query(Response_Data).filter("group =", group)
+# 		for r in q:
+# 			data.append((r.path, r.eTag, r.lastModified))
+# 		return data
+# 	@classmethod
+# 	def update_loc(cls, loc, etag):
+# 		logging.error(loc)
+# 		logging.error(etag)
+# 		Sitemap_Data(loc=loc, etag=etag).put()
+# #
 def get_response_data(response):
 	data_key_str = response.path
 	data_key = db.Key.from_path(Response_Data.kind(), data_key_str)
-#
-def sitemap_entries():
-	result = []
-	app = webapp2.get_app()
-	request = webapp2.get_request()
-	#
-	now = datetime.datetime.now().strftime("%Y-%m-%d")
-	sitemap_data = {}
-	for d in Sitemap_Data.all():
-		sitemap_data[d.loc] = d.last_modified
-	#
-	for r in app.router.match_routes:
-		if not r.in_sitemap:
-			continue
-		for args, kwargs, priority in r.get_sitemap_args():
-			kwargs['_canonical'] = True
-			loc = r.build(request, args, dict(kwargs))
-			lastmod = sitemap_data.get(loc, now)
-			result.append((loc, lastmod, priority))
-	return result
 #

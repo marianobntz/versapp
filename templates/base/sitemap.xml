@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 {# $Id$ #}
-{% set entries = sitemap_entries() %}
 <urlset
 	xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
@@ -8,14 +7,11 @@
 	xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 {% for entry in entries %}
 <url>
-	<loc>{{ host_url }}{{ entry.0 }}</loc>
-	<lastmod>{{ entry.1 }}</lastmod>
-	<priority>{{ entry.2 }}</priority>
-	{% if entry.3 %}
-	<image:image>
-		<image:loc>{{ host_url }}{{ entry.3 }}</image:loc>
-	</image:image>
-	{% endif %}
+	<loc>{{ entry.loc }}</loc>
+	{% if entry.lastmod %}<lastmod>{{ entry.lastmod }}</lastmod>{% endif %}
+	{% if entry.priority %}<priority>{{ entry.priority }}</priority>{% endif %}
+	{% if entry.changefreq %}<changefreq>{{ entry.changefreq }}</changefreq>{% endif %}
+	{% if entry.image_loc %}<image:image><image:loc>{{ entry.image_loc }}</image:loc></image:image>{% endif %}
 </url>
 {% endfor %}
 </urlset>

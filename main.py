@@ -22,7 +22,7 @@ PAGES_CC = versapp.CC_PUBLIC(max_age=versapp.day) if IS_GOOGLE else versapp.CC_N
 DEFAULT_CC = versapp.CC_PUBLIC(max_age=versapp.year) if IS_GOOGLE else versapp.CC_NO_CACHE
 
 def get_model(id):
-	logging.error(id)
+	# logging.error(id)
 	return {'id': id, 'name': 'nn'+id }
 global_map = {
 	'get_model': get_model,
@@ -78,8 +78,10 @@ routes = [
 	versapp.new_route(versapp.TemplateHandler, '/modelos/<id:\d\d\d\d\d>', name='modelo', template_format='%(Language)s/html/modelo_.html', in_sitemap=True, sitemap_args=models, cache_control=PAGES_CC),
 	versapp.new_route(versapp.TemplateHandler, '/albums/<id>', name='album', template_format='%(Language)s/html/album_.html', in_sitemap=True, sitemap_args=albums, cache_control=PAGES_CC),
 
-	versapp.new_route(versapp.TemplateHandler, '/sitemap.xml', name='sitemap', template_file='sitemap.xml', cache_control=versapp.CC_NO_CACHE),
+	versapp.new_route(versapp.TemplateHandler, '/sitemap.xml', name='sitemap', template_file='base/sitemap.xml', cache_control=versapp.CC_NO_CACHE),
 	versapp.new_route(versapp.StaticHandler, '/images/<image>', name="images", template_file="kk", build_only='true'),
+	# faltan los robots.txt
+	versapp.new_route(versapp.SitemapHandler, '/s.xml', name='sitemap2', template_file='base/sitemap.xml', cache_control=versapp.CC_NO_CACHE),
 ]
 
 routes.extend(build_html_template_routes())

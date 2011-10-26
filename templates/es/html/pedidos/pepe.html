@@ -1,12 +1,12 @@
-{% extends '../base.html' %}
-
-{% block __Title %}Pepopoonon{% endblock %}
-
-{% block __Description %}Probssssssssando la Casa Nueva{% endblock %}
-
+{# $Id$ #}
+{% set Title = 'Pepopoonon' %}
+{% set Description = 'Descripcion del Pepe ' %}
+{% set meta_page_url = uri_for(route_name, _canonical=True) %}
+{% set meta_page_type = 'article' %}
+{% extends "base/html/base_.html" %}
 {% block body %}
-<h1>HolaaE PEPEPE!</h1>
-<a href="{% url home %}">{% url_title home %}</a>
-<a href="{% url pedidos/pepe %}">{% url_title pedidos/pepe %}</a>
+<h1>HolaaE PEPEPE! {{ Title }}</h1>
+<a href="{{ uri_for('index') }}">{# url_title home #}</a>
+<a href="{{ uri_for('pedidos/pepe') }}">{'% url_title pedidos/pepe % }</a>
 {% endblock %}
 
