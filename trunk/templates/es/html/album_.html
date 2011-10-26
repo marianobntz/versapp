@@ -1,0 +1,19 @@
+{# $Id$ #}
+{% set Title = 'Album ' + id %}
+{% set Description = 'Descripcion del Album ' + id %}
+{% set meta_page_url = uri_for(route_name, id=id, _canonical=True) %}
+{% set meta_page_type = 'article' %}
+{% extends "base/html/base_.html" %}
+{% block body %}
+<h1>Hola! {{ Title }}</h1>
+<h2>{{ Description }}</h2>
+	{% block __Title %}Genioaasaaaaaaasdasdadsddd
+	sdadsad
+	
+	gggasd{% endblock %}{{ id }}
+	{% set model = get_model('id') %}
+	<br/>
+	{{ model.name }} - {{ uri_for('modelos', id='id',_full=true) }} - directory handler<br/>
+	<a href="{{ uri_for('modelos') }}">Modelos</a><br/>
+	<a href="{{ uri_for('index') }}">Home</a><br/>
+{% endblock %}
