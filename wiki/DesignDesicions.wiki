@@ -3,6 +3,13 @@
 
 = Sitemap =
 
+Listing a Route in the sitemap requires that you define a default value of "sitemap_group". 
+
+== Building the sitemap entries is independent of rendering a sitemap ==
+To optimize and simplify the framework, the sitemap handler will just query the SitemapEntries table filtering with the sitemap group.
+
+The same handler in a different hole will take care of dispatching the rebuild of each route_group
+
 The sitemap is part of the framework, and each route defines an *in_sitemap* attribute, plus a *sitemap_args* used to retrieve the list of arguments used to build the sitemap uris.
 
 = Response Headers =
