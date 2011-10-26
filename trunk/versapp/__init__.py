@@ -186,7 +186,7 @@ class RequestHandler(webapp2.RequestHandler):
 			return
 		if prev_etag != response.etag:
 			# store new etag and last-modified
-			logging.error("modified %s" % self.request.path)
+			logging.info("Sitemap entry updated %s" % self.request.path)
 			SitemapEntries.update(group=self.request.route.sitemap_group, loc=self.request.path_url, etag=response.etag, priority="0.4")
 		# ToDo how to customize priority and changefreq
 			
