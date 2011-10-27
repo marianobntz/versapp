@@ -1,0 +1,5 @@
+# $Id$
+cron:
+- description: rebuild sitemap
+  url: /admin/rebuild_sitemap
+  schedule: every day 01:00

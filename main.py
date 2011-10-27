@@ -15,7 +15,7 @@ IS_GOOGLE = os.environ.get('SERVER_SOFTWARE','').lower().startswith('google')
 IS_DEVELOPMENT = not IS_GOOGLE
 
 HOST = os.environ['HTTP_HOST']
-WWW_HOST = "www.%s" % app_identity.get_default_version_hostname() if IS_GOOGLE else None
+WWW_HOST = "%s" % app_identity.get_default_version_hostname() if IS_GOOGLE else None
 CDN1_HOST = "cdn1.%s" % app_identity.get_default_version_hostname() if IS_GOOGLE else None
 CDN2_HOST = "cdn2.%s" % app_identity.get_default_version_hostname() if IS_GOOGLE else None
 PAGES_CC = versapp.CC_PUBLIC(max_age=versapp.day) if IS_GOOGLE else versapp.CC_NO_CACHE
@@ -30,12 +30,11 @@ global_map = {
 	'img_netloc': CDN2_HOST or HOST,
 }
 app_config = {
-	'_canonical_netloc': WWW_HOST or HOST,
 	'default_cache_control': DEFAULT_CC,
 }
 templates_path = 'templates'
 static_path = 'static'
-app = versapp.initialize(template_path=templates_path, debug=True, globals=global_map, config=app_config)
+app = versapp.initialize(template_path=templates_path, debug=IS_DEVELOPMENT, template_globals=global_map, config=app_config, canonical_netloc= WWW_HOST or HOST)
 
 def build_html_template_routes():
 	routes = []
@@ -53,7 +52,7 @@ def build_html_template_routes():
 		if template.endswith("index"):
 			template = template[:-5]
 		template_format = "%(Language)s/html/" + path
-		route = versapp.new_route(versapp.TemplateHandler, template, template_format=template_format, name=name, in_sitemap=True, cache_control=PAGES_CC)
+		route = versapp.new_route(versapp.TemplateHandler, template, template_format=template_format, name=name, sitemap=True, cache_control=PAGES_CC)
 		routes.append(route)
 	return routes
 #
@@ -71,17 +70,17 @@ def build_webmaster_routes():
 models = [(['aaaa'], {'id': '00001'}, 1), ([], {'id': '00002'},1)]
 def albums():
 	return [([], {'id': 'mickey-mouse'},3), ([], {'id': 'disney'},2)]
+
+
 routes = [
 	versapp.new_route(versapp.StaticHandler, '/favicon.ico', name="favicon.ico", template_file='static/external/favicon.ico'),
 	versapp.new_route(versapp.TemplateHandler, '/css/rtf-<Revision:\d\d\d\d\d>.css', name='rtf.css', template_file='base/css/rtf.css', versioned_arg="Revision"),
 
-	versapp.new_route(versapp.TemplateHandler, '/modelos/<id:\d\d\d\d\d>', name='modelo', template_format='%(Language)s/html/modelo_.html', in_sitemap=True, sitemap_args=models, cache_control=PAGES_CC),
-	versapp.new_route(versapp.TemplateHandler, '/albums/<id>', name='album', template_format='%(Language)s/html/album_.html', in_sitemap=True, sitemap_args=albums, cache_control=PAGES_CC),
+	versapp.new_route(versapp.TemplateHandler, '/modelos/<id:\d\d\d\d\d>', name='modelo', template_format='%(Language)s/html/modelo_.html', sitemap=True, sitemap_args=models, cache_control=PAGES_CC),
+	versapp.new_route(versapp.TemplateHandler, '/albums/<id>', name='album', template_format='%(Language)s/html/album_.html', sitemap=True, sitemap_args=albums, cache_control=PAGES_CC),
 
-	versapp.new_route(versapp.TemplateHandler, '/sitemap.xml', name='sitemap', template_file='base/sitemap.xml', cache_control=versapp.CC_NO_CACHE),
 	versapp.new_route(versapp.StaticHandler, '/images/<image>', name="images", template_file="kk", build_only='true'),
 	# faltan los robots.txt
-	versapp.new_route(versapp.SitemapHandler, '/s.xml', name='sitemap2', template_file='base/sitemap.xml', cache_control=versapp.CC_NO_CACHE),
 ]
 
 routes.extend(build_html_template_routes())

@@ -19,11 +19,13 @@ import webob
 import webapp2
 import webapp2_extras
 import jinja2
-from webapp2_extras import jinja2 as jinja2e
+from webapp2_extras import jinja2 as webapp2_jinja2
 from utils import *
 
 
 DEFAULT_LANGUAGE = APP_LANGUAGE_DEFAULT
+DEFAULT_SITEMAP_GROUP = "default"
+DEFAULT_TEMPLATES_PATH = 'templates'
 CC_NO_CACHE = "no-cache"
 CC_PUBLIC = lambda max_age: "public, max-age=%s" % max_age
 CC_PRIVATE = lambda max_age: "private, max-age=%s" % max_age
@@ -31,8 +33,8 @@ day = 24*60*60
 year = 365*day
 
 class WSGIApplication(webapp2.WSGIApplication):
-	def __init__(self, *args, **kwargs):
-		super(WSGIApplication, self).__init__(*args, **kwargs)
+	def __init__(self, **kwargs):
+		super(WSGIApplication, self).__init__(**kwargs)
 		self.router.set_dispatcher(self.__class__.custom_dispatcher)
 
 	@staticmethod
@@ -46,48 +48,67 @@ class WSGIApplication(webapp2.WSGIApplication):
 
 		return rv
 #
-def initialize(template_path, *args, **kwargs):
-	"""Initialize arguments
-	_canonical_netloc: network location for "canonical" uris
-	""" 
-	jinja2_globals = {
-		'uri_for': webapp2.uri_for,
-	}
-	jinja2_globals.update(kwargs.pop('globals', {}))
-	jinja2e.default_config = {
-		'template_path': template_path, 
-		'compiled_path': None,
-		'filters': None,
-		'force_compiled': False,
-		'globals': jinja2_globals, 
-		'environment_args': {'autoescape': True, 'trim_blocks': True, 'extensions': ['jinja2.ext.autoescape', 'jinja2.ext.with_']}, 
-	}
-	return WSGIApplication(*args, **kwargs)
+def initialize(**kwargs):
+	"""Creates a new WSGIApplication with the proper configuration
+	
+	:param template_path:
+		base directory for jinja2 templates. default 'templates'
+	:param template_globals:
+		dict for global variables available for jinja2 templates.
+	:param canonical_netloc:	
+		network location for canonical URIs.
+	:param canonical_scheme:
+		URI scheme for canonical URIs.
+	:param sitemap:
+		include the handlers required to render a sitemap and rebuild them. default True
+	:returns:
+		a new :class:`WSGIApplication` instance.
+	"""
+	#
+	# Hint: do not replace jinja2 default_config, update it
+	template_path = kwargs.pop('template_path', DEFAULT_TEMPLATES_PATH)
+	webapp2_jinja2.default_config['template_path'] = template_path # @Todo verify template_path exists
+	
+	template_globals = kwargs.pop('template_globals', {})
+	template_globals['uri_for'] = webapp2.uri_for
+	webapp2_jinja2.default_config['globals'] = template_globals
+	
+	webapp2_jinja2.default_config['environment_args']['trim_blocks'] = True
+
+	app_config = kwargs.setdefault('config', {})
+	app_config['canonical_netloc'] = kwargs.pop('canonical_netloc', None)
+	app_config['canonical_scheme'] = kwargs.pop('canonical_scheme', None)
+	
+	sitemap = kwargs.pop('sitemap', True)
+	if sitemap:
+		routes = kwargs.setdefault('routes', [])
+		routes.append(SitemapHandler.render_route())
+		routes.append(SitemapHandler.rebuild_route())
+	return WSGIApplication(**kwargs)
 #
-class Response(webapp2.Response):
-	def header_data(self):
-		#
-		# First the eTag
-		self.md5_etag()
-		#
-		# Last-Modified
-		self.last_modified = get_set_response_data('path', self.eTag)
-		
-		
+
 class Route(webapp2.Route):
 	"""The Route object contains all configuration information about the route.
 
-    :template:
-	:handler: 
-	:cache_control:
-    """
-    
+	All routes should extend this class, so it can use the _canonical argument in uri_for
+	
+	:param template:
+	:param handler: 
+	:param cache_control:
+	:param content_type:
+	:param sitemap:
+		include the route in the sitemap. default True
+		if True then use the default sitemap group, if string use at sitemap group.
+	:param sitemap_args:
+		what is used to build the URIs to include in the sitemap
+	"""
 	def __init__(self, template=None, handler=None, name=None, **kw):
 		super(Route, self).__init__(template, handler=handler, name=name, build_only=kw.pop("build_only", None), defaults=kw.pop("defaults", None), methods=kw.pop("methods", ('GET', 'HEAD')), schemes=kw.pop("schemes", None))
 		self.cache_control = kw.pop("cache_control", None)
 		self.content_type = kw.pop("content_type", "text/html")
 		self.sitemap_args = kw.pop("sitemap_args", None)
-		self.sitemap_group = kw.pop("sitemap_group", DEFAULT_SITEMAP_GROUP if kw.pop("in_sitemap", False) else None)
+		s = kw.pop("sitemap", None)
+		self.sitemap_group = None if not s else DEFAULT_SITEMAP_GROUP if s == True else s
 		self.defaults.update(kw)
 	#
 	def build_response(self, body=None, unicode_body=None):
@@ -115,13 +136,12 @@ class Route(webapp2.Route):
 			return self.sitemap_args # @ToDo clone the map so it is not modified
 	#
 	def build(self, request, args, kwargs):
+		"""Enhance the _canonical argument to use the canonical_netloc and canonical_scheme config parameters. 
+		"""
 		if kwargs.pop('_canonical', False):
-			_netloc = webapp2.get_app().config.get('_canonical_netloc', None)
-			if _netloc:
-				kwargs['_netloc'] = _netloc
-			else:
-				kwargs['_full'] = True
-			# no need to change the _scheme yet...
+			kwargs['_full'] = True
+			kwargs['_netloc'] = request.app.config.get('canonical_netloc', None)
+			kwargs['_scheme'] = request.app.config.get('canonical_scheme', None)
 		return super(Route, self).build(request, args, kwargs)
 #
 class FileRoute(Route):
@@ -187,6 +207,7 @@ class RequestHandler(webapp2.RequestHandler):
 		if prev_etag != response.etag:
 			# store new etag and last-modified
 			logging.info("Sitemap entry updated %s" % self.request.path)
+			# change the loc from request.path_url to the canonical url (then it will work fine)
 			SitemapEntries.update(group=self.request.route.sitemap_group, loc=self.request.path_url, etag=response.etag, priority="0.4")
 		# ToDo how to customize priority and changefreq
 			
@@ -245,7 +266,6 @@ class StaticHandler(RequestHandler):
 		r = self.request.route.build_response(body=content)
 		return r
 #
-DEFAULT_SITEMAP_GROUP = "default"
 class SitemapEntry(object):
 	def __init__(self, loc, lastmod=None, image_loc=None, priority=None, changefreq=None):
 		self.loc = loc
@@ -275,16 +295,40 @@ class SitemapEntries(db.Model):
 		SitemapEntries(key_name=loc, group=group, loc=loc, etag=etag, priority=priority, changefreq=changefreq, image_loc=image_loc).put()
 #
 class SitemapHandler(RequestHandler):
-	"""We support multiple sitemaps in the application by using the sitemap_group attribute when defining the routes using this handler.
-	
-	
+	"""We support multiple sitemaps in the application by using the sitemap attribute when defining the routes using this handler.
 	"""
-	#
-	#
 	def initialize(self, request, response):
 		super(SitemapHandler, self).initialize(request, response)
-		self.sitemap_group = self.get_default('sitemap_group', DEFAULT_SITEMAP_GROUP)
+		self.sitemap_group = self.get_default( 'sitemap_group')
 	#
+	@classmethod
+	def render_route(cls, template='/sitemap.xml', name='sitemap', template_file='base/sitemap.xml', **kw):
+		"""
+		:param template:
+		:param name:
+		:param template_file:
+		:param sitemap_group:
+			default 'default'
+		:returns:
+			a new :class:`Route` for the sitemap handler
+		"""
+		kw['cache_control'] = CC_NO_CACHE
+		kw.setdefault('sitemap_group', DEFAULT_SITEMAP_GROUP)
+		return new_route(cls, template, name=name, template_file=template_file, **kw)
+	@classmethod
+	def rebuild_route(cls, template='/admin/rebuild_sitemap', name='rebuild_sitemap', **kw):
+		"""
+		:param template:
+		:param name:
+		:param sitemap_group:
+			default 'default'
+		:returns:
+			a new :class:`Route` for the sitemap handler
+		"""
+		kw['rebuild'] = True
+		kw['cache_control'] = CC_NO_CACHE
+		kw.setdefault('sitemap_group', DEFAULT_SITEMAP_GROUP)
+		return Route(handler=cls, template=template, name=name, **kw)
 	def router_urls(self):
 		"""Traverses all the routes and retrieves the possible urls for each one.
 			Returns: a list of tupes (canonical, path)
@@ -312,19 +356,22 @@ class SitemapHandler(RequestHandler):
 	#	
 	def get(self, *args, **kwargs):
 		entries = self.build_entries()
-		if self.request.get('_rebuild'):
+		if self.get_default('rebuild'):
 			urls = self.router_urls()
 			self.defer_rebuild(urls, entries)
+			content = u'ok'
+		else:
+			template_file = self.request.route.template_file
+			content = self.render_template(template_file, entries=entries)
 		#
-		template_file = self.request.route.template_file
-		content = self.render_template(template_file, entries=entries)
 		r = self.request.route.build_response(unicode_body=content)
 		return r
 	#
 	def build_entries(self):
 		"""
-			returns the list of entries to include in this sitemap.
 			This method is here to allow a simple inheritance so you can customize the way you obtain the entries.
+		:returns:
+			the list of :class:`SitemapEntries` instances to include in this sitemap.
 		"""
 		return SitemapEntries.get_entries(self.sitemap_group)
 	
