@@ -31,4 +31,6 @@ It is a good practice to include the rel="canonical" header, but we need to know
 
 = Jinja = 
 
+We  use a single instance of jinja2 object. The default configuration is modified, so we do not use the instance specific params. This is simpler than allowing multiple app instances, which is complex to setup for simple apps.
+
 *trim_blocks* to remove new lines
