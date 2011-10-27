@@ -1,6 +1,9 @@
 #summary Record of the design decisions made for this app.
 #labels Phase-Design,Featured
 
+= Routes = 
+The framework works only with versapp.Route instances.
+
 = Sitemap =
 
 Listing a Route in the sitemap requires that you define a default value of "sitemap_group". 
