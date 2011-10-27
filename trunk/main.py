@@ -67,9 +67,16 @@ def build_webmaster_routes():
 		routes.append(route)
 	return routes
 #
-models = [(['aaaa'], {'id': '00001'}, 1), ([], {'id': '00002'},1)]
+models = []
+for a in range(0, 1000):
+	models.append((['aaaa'], {'id': '%05d' % a}, 1))
+# models = [(['aaaa'], {'id': '00001'}, 1), ([], {'id': '00002'},1)]
 def albums():
-	return [([], {'id': 'mickey-mouse'},3), ([], {'id': 'disney'},2)]
+	result = []
+	for a in range(0, 100):
+		result.append((['bbb'], {'id': 'esooo %04d' % a}, 2))
+	return result
+	# return [([], {'id': 'mickey-mouse'},3), ([], {'id': 'disney'},2)]
 
 
 routes = [
