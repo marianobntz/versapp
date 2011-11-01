@@ -1,7 +1,7 @@
 {# $Id$ #}
 {% set Title = 'Modelo ' + id %}
 {% set Description = 'Descripcion del modelo ' + id %}
-{% set meta_page_url = uri_for(route_name, id=id, _canonical=True) %}
+{% set meta_page_url = uri_for(route_name, id=id, _full=True) %}
 {% set meta_page_type = 'article' %}
 {% extends "base/html/base_.html" %}
 {% block body %}
