@@ -57,7 +57,7 @@ class Route(webapp2.Route):
 		
 		self._netloc = kw.pop('_netloc', None)
 
-		self._full = kw.pop('_full', False)
+		self._full = kw.pop('_full', True if self._netloc else False)
 
 		self.defaults.update(kw)
 
@@ -144,3 +144,6 @@ def new_route(handler, template, name, **kw):
 		Versioned_Files.check_version(template_file, file_version, content)
 		#
 	return FileRoute(template=template, handler=handler, name=name, **kw)
+	
+def build_route(template, name, **kw):
+	return Route(template=template, name=name, build_only=True, **kw)
