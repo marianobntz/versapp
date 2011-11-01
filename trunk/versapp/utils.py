@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 # $Id$
 #
@@ -28,11 +28,20 @@ CONTENT_TYPES = {
 APP_LANGUAGES = ['es', 'en', ]
 APP_LANGUAGE_DEFAULT = 'es'
 COUNTRY_2_LANGUAGE = { 'AR': 'es', 'BR': 'pt', 'US': 'en'}
+
+IS_GOOGLE = os.environ.get('SERVER_SOFTWARE','').lower().startswith('google')
 #
 def request_language(request):
+	"""
+	:param request:
+		the request to analyze
+	:returns:
+		The language determined for the request
+	"""
 	result = request.get("hl", default_value=None)
 	if result in APP_LANGUAGES:
 		return result
+	
 	#
 	# try to find a cookie
 	# logging.error(environ['HTTP_COOKIE'] if 'HTTP_COOKIE' in environ else "No Cookies")
@@ -82,13 +91,23 @@ def walk_tree(root):
 	result = []
 	for base, dirs, files in os.walk(root):
 		base_prefix = "" if root == base else base[len(root)+1:]
-		if base_prefix.startswith('.svn'): # remove normal VCS files!
+		if base_prefix.startswith('.svn'): # TODO (mariano) remove normal VCS files!
 			continue
 		for f in files:
 			path = os.path.join(base_prefix, f)
 			result.append(path)
 	result.sort()
 	return result
+#
+def tree_paths(root):
+	""""Returns the list of files (complete with subpaths) inside the root tree."""
+	for base, dirs, files in os.walk(root):
+		base_prefix = "" if root == base else base[len(root)+1:]
+		if base_prefix.startswith('.svn'): # TODO (mariano) remove normal VCS files!
+			continue
+		for f in files:
+			path = os.path.join(base_prefix, f)
+			yield path
 #
 class Versioned_Files(db.Model):
 	template_file = db.StringProperty()

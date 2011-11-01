@@ -9,11 +9,12 @@
 <h2>{{ Description }}</h2>
 
 <a href="/_ah/admin">Local Admin</a><br/>
-<a href="{{ uri_for('sitemap') }}">Sitemap</a><br/>
+<h2><a href="{{ uri_for('sitemap') }}">Sitemap</a> (<a href="{{ uri_for('rebuild_sitemap') }}">Rebuild</a>)</h2>
 
-<a href="{{ uri_for(route_name, _netloc=canonical_netloc ) }}">{{ uri_for(route_name, _netloc=canonical_netloc ) }}</a><br/>
+<h2>Links</h2>
+Aquí <a href="{{ meta_page_url }}">{{ meta_page_url }}</a><br/>
 
-<a href="{{ uri_for('rtf.css') }}">{{ uri_for('rtf.css') }}</a><br/>
+Este es el CSS <a href="{{ uri_for('rtf.css') }}">{{ uri_for('rtf.css') }}</a> que usamos<br/>
 
 {{ uri_for('index', _full=true) }} - directory handler<br/>
 <br/>
