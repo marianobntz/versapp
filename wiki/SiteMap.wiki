@@ -25,3 +25,32 @@ Add your content here.  Format your content with:
   * Text in *bold* or _italic_
   * Headings, paragraphs, and lists
   * Automatic links to other wiki pages
+
+
+= Raw =
+
+Sitemap
++ handlers
+ - define si esta incluido y cual (True o string). (Sitemap-Group)
+ - define sus propios valores para incluir las urls (args, kwargs),
+ - priority, changefreq e imageloc se definen y graban junto con el lastmod (ver si puedo obtener el contexto modificado dsps del render)
+ - header "Check-Lastmod" que marca la validacion. Busca los args y si no lo encuentra los trae del db.
+
++ sitemap handler
+ - tiene asociado un Sitemap-Group.
+ - busca todas las entradas del grupo y pinta directo
+- solo responde en el canonico, sino 404, si es appspot devuelve las urls que devuelven los handlers, sin lastmod ni nada
+  (Es asi: si es canonico: full. Si es appspot: urls solo. Sino: 404)
+
++ sitemap rebuild handler
+ - busca los paths de los handlers (se puede sobrescribir)
+ - busca todas las entradas del grupo y borra los que no van mas)
+ - manda a pintar los path que quedan mandando los headers de check + etag, lastmod, priority, etc
+- si esta en background no devuelve nada, sino un redirect al referer o al home (x default)
+
++ wsgi app
+- tiene un mtd statico q devuelve los handlers default (sitemap, rebuild)
+- incluir en sitemap.xml un  comment que lo dejen en ese lugar si van con el default
+
++ app.yaml
+- rebuild en admin section
