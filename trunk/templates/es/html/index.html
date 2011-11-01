@@ -1,7 +1,7 @@
 {# $Id$ #}
 {% set Title = 'Indice' %}
 {% set Description = 'Sitio nuevo' %}
-{% set meta_page_url = uri_for(route_name, _canonical=True) %}
+{% set meta_page_url = uri_for(route_name, _full=True) %}
 {% set meta_page_type = 'website' %}
 {% extends "base/html/base_.html" %}
 {% block body %}

@@ -1,13 +1,13 @@
 {# $Id$ #}
 {% set Title = 'Models' %}
 {% set Description = 'Models list' %}
-{% set meta_page_url = uri_for(route_name, id=id, _canonical=True) %}
+{% set meta_page_url = uri_for(route_name, _full=True) %}
 {% set meta_page_type = 'article' %}
 {% extends "base/html/base_.html" %}
 {% block body %}
 <h1>Hello! {{ Title }}</h1>
 <h2>{{ Description }}</h2>
-<a href="{{ uri_for(route_name, _canonical=True ) }}">{{ uri_for(route_name, _canonical=True ) }}</a>
+<a href="{{ uri_for(route_name, _full=True ) }}">{{ uri_for(route_name, _full=True ) }}</a>
 <h2>{{ PEPE }}</h2>
 {% block __Title %}aaasdasdasddd English<br/>{% endblock %}
 <a href="{{ uri_for('modelo', id='00001' ) }}">Modelo AA</a>
