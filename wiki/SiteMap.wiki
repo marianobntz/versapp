@@ -4,10 +4,20 @@
 
 The application defines a sitemap (by default located in _/sitemap.xml_), that includes all urls handled by the application.
 
-= Request Handlers setup =
+== Request Handlers setup ==
 
 Each new _route_ can define a *sitemap* attribute that defines if the handler URLs are included in the sitemap.
 If the route defines a pattern instead of a simple path, the route has to define a _sitemap_args_ argument to define the list of arguments to use building URLs for the sitemap.
+
+Sitemap args is a list used in [http://webapp-improved.appspot.com/guide/routing.html#guide-routing URI Routing].
+{{{
+models_args = []
+for model in all_models:
+	models_args.append(([], {'model_id': model.id}))
+
+route = versapp.new_route(versapp.TemplateHandler, '/models/<model_id>', name='model', 
+       template_file='html/model_.html', sitemap=True, sitemap_args=['model1', 'model2', 'model3', ])
+}}}
 
 = Details =
 
