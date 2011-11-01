@@ -1,7 +1,7 @@
 /* $Id$ */
 
 /* The basic palette */
-html { background: #E6F3F3 url({{ uri_for('images', image='rtf_fondo.jpg', _netloc=img_netloc) }}) repeat scroll top left; }
+html { background: #E6F3F3 url({{ uri_for('images', image='rtf_fondo.jpg') }}) repeat scroll top left; }
 body { font-family: verdana, sans-serif; text-align: center;}
 h1, h2, .h2, .h1 { color: #7b419b; }
 .h2 {font-size: 1.2em; font-family: verdana; font-weight: bold; line-height: 1.2em;}

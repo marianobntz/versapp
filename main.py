@@ -25,17 +25,14 @@ def get_model(id):
 	return {'id': id, 'name': 'nn'+id }
 global_map = {
 	'get_model': get_model,
-	'img_netloc': CDN2_HOST,
 }
 app_config = {
 	'default_cache_control': DEFAULT_CC,
 }
 static_path = 'static'
-cdn_netlocs = [CDN1_HOST,CDN2_HOST]
 
-
-app = versapp.initialize(template_path=TEMPLATES_PATH, debug=IS_DEVELOPMENT, template_globals=global_map, config=app_config, canonical_netloc= WWW_HOST,
-						 cdn_netlocs=cdn_netlocs)
+app = versapp.initialize(template_path=TEMPLATES_PATH, debug=IS_DEVELOPMENT, template_globals=global_map, config=app_config, 
+						 canonical_netloc=WWW_HOST, cdn_netlocs=[CDN1_HOST,CDN2_HOST])
 
 def add_html_template_routes(routes):
 	# we walk default language files
@@ -79,8 +76,8 @@ routes = [
 	versapp.new_route(versapp.TemplateHandler, '/modelos/<id:\d\d\d\d\d>', name='modelo', template_format='%(Language)s/html/modelo_.html', sitemap=True, sitemap_args=models, cache_control=PAGES_CC),
 	versapp.new_route(versapp.TemplateHandler, '/albums/<id>', name='album', template_format='%(Language)s/html/album_.html', sitemap=True, sitemap_args=albums, cache_control=PAGES_CC),
 
-	versapp.new_route(versapp.StaticHandler, '/images/<image>', name="images", template_file="kk", build_only='true'),
-	versapp.new_route(versapp.StaticHandler, '/css/jquery.css', name="jquery.css", template_file="kk", build_only='true', _netloc="aaasss", _full=True),
+	versapp.build_route('/images/<image>', name="images", _netloc=CDN2_HOST),
+	versapp.build_route('/css/jquery.css', name="jquery.css", _netloc="aaasss"),
 	# faltan los robots.txt
 ]
 
