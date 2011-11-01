@@ -2,7 +2,11 @@
 
 = How to handle canonical and CDN =
 
-Application initialization
+Application initialization requires a canonical_netloc and a list of cdn_netloc.
+
+Each route can define _full and _netloc that are send over when they are rendered.
+
+A route can only be rendered if the request host if the cdn or canonical. Unless is on dev_server or hitting appspot directly.
 
 
 = Details =
