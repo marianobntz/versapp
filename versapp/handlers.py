@@ -14,6 +14,38 @@ from google.appengine.api import app_identity
 from versapp.utils import *
 from versapp.routes import *
 
+import config
+
+#
+#
+class SitemapEntry(object):
+	def __init__(self, loc, lastmod=None, image_loc=None, priority=None, changefreq=None):
+		self.loc = loc
+		self.priority = priority
+		self.lastmod = lastmod
+		self.image_loc = image_loc
+		self.changefreq = changefreq
+#
+class SitemapEntries(db.Model):
+	group = db.StringProperty()
+	loc = db.StringProperty()
+	etag = db.StringProperty()
+	lastmod = db.DateProperty(auto_now=True)
+	priority = db.StringProperty()
+	changefreq = db.StringProperty()
+	image_loc = db.StringProperty()
+	#
+	@classmethod
+	def get_entries(cls, group):
+		# ToDo (mariano): implement caching
+		result = []
+		for r in db.Query(cls).filter("group =", group):
+			result.append(r)
+		return result
+	@classmethod
+	def update(cls, group, loc, etag, priority=None, changefreq=None, image_loc=None):
+		SitemapEntries(key_name=loc, group=group, loc=loc, etag=etag, priority=priority, changefreq=changefreq, image_loc=image_loc).put()
+
 class RequestHandler(webapp2.RequestHandler):
 	@webapp2.cached_property
 	def jinja2(self):
@@ -43,10 +75,10 @@ class RequestHandler(webapp2.RequestHandler):
 		# 
 		# here we modify the request so it makes it believe is canonical
 		if request.get('Set-Canonical', False):
-			m_a['Language'] = request.app.config.get('canonical_language', DEFAULT_LANGUAGE)
+			m_a['Language'] = request.app.config.get('canonical_language', config.DEFAULT_LANGUAGE)
 			logging.error(m_a['Language'])
 			request.host = request.app.config.get('canonical_netloc')
-			# m_a['Language'] = request.app.config.get('canonical_language', DEFAULT_LANGUAGE)
+			# m_a['Language'] = request.app.config.get('canonical_language', config.DEFAULT_LANGUAGE)
 		else:
 			m_a['Language'] = request.environ['REQUEST_LANGUAGE']
 		m_a.update(request.route_kwargs)
@@ -155,3 +187,86 @@ class StaticHandler(RequestHandler):
 			content = read_binary_file(self.request.route.template_file)
 		r = self.request.route.build_response(body=content)
 		return r
+
+#
+class SitemapHandler(RequestHandler):
+	"""We support multiple sitemaps in the application by using the sitemap attribute when defining the routes using this handler.
+	"""
+	def initialize(self, request, response):
+		super(SitemapHandler, self).initialize(request, response)
+		self.sitemap_group = self.get_default( 'sitemap_group')
+	#
+	@classmethod
+	def render_route(cls, template='/sitemap.xml', name='sitemap', template_file='base/sitemap.xml', **kw):
+		"""
+		:param template:
+		:param name:
+		:param template_file:
+		:param sitemap_group:
+			default 'default'
+		:returns:
+			a new :class:`Route` for the sitemap handler
+		"""
+		kw['cache_control'] = config.CC_NO_CACHE
+		kw.setdefault('sitemap_group', config.DEFAULT_SITEMAP_GROUP)
+		return new_route(cls, template, name=name, template_file=template_file, **kw)
+	@classmethod
+	def rebuild_route(cls, template='/admin/rebuild_sitemap', name='rebuild_sitemap', **kw):
+		"""
+		:param template:
+		:param name:
+		:param sitemap_group:
+			default 'default'
+		:returns:
+			a new :class:`Route` for the sitemap handler
+		"""
+		kw['rebuild'] = True
+		kw['cache_control'] = config.CC_NO_CACHE
+		kw.setdefault('sitemap_group', config.DEFAULT_SITEMAP_GROUP)
+		return Route(handler=cls, template=template, name=name, **kw)
+	def router_urls(self):
+		"""Traverses all the routes and retrieves the possible urls for each one.
+			Returns: a list of tupes (canonical, path)
+		"""
+		result = [] 
+		#
+		for r in self.app.router.match_routes:
+			if r.sitemap_group != self.sitemap_group:
+				continue
+			for args, kwargs in r.sitemap_args: # removed priority
+				 # @ToDo sitemap_args should be inmutable
+				path = r.build(self.request, args, dict(kwargs))
+				kwargs = dict(kwargs)
+				kwargs['_canonical'] = True
+				canonical = r.build(self.request, args, kwargs)
+				result.append((canonical, path))
+		return result
+	#
+	def defer_rebuild(self, router_urls, current_entries):
+		from google.appengine.api import taskqueue
+		entries_map = dict(map(lambda e: (e.loc, e.etag), current_entries))
+
+		for canonical, path in router_urls:
+			etag = entries_map.get(canonical, 'New')
+			taskqueue.Queue("default").add(taskqueue.Task(url=path, headers={'_rebuild': etag, 'Set-Canonical': True}, method='GET')) # @ToDo implement HEAD method
+	#	
+	def get(self, *args, **kwargs):
+		entries = self.build_entries()
+		if self.get_default('rebuild'):
+			urls = self.router_urls()
+			self.defer_rebuild(urls, entries)
+			content = u'ok'
+		else:
+			template_file = self.request.route.template_file
+			content = self.render_template(template_file, entries=entries)
+		#
+		r = self.request.route.build_response(unicode_body=content)
+		return r
+	#
+	def build_entries(self):
+		"""
+			This method is here to allow a simple inheritance so you can customize the way you obtain the entries.
+		:returns:
+			the list of :class:`SitemapEntries` instances to include in this sitemap.
+		"""
+		return SitemapEntries.get_entries(self.sitemap_group)
