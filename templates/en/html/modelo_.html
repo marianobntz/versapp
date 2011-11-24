@@ -11,7 +11,7 @@
 	sdadsad
 	
 	gggasd{% endblock %}{{ id }}
-	{% set model = get_model('id') %}
+	{% set model = get_model(id) %}
 	<br/>
 	{{ model.name }} - {{ uri_for('modelos', id='id',_full=true) }} - directory handler<br/>
 	<a href="{{ uri_for('modelos') }}">Modelos</a><br/>
