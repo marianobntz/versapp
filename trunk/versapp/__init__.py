@@ -23,6 +23,7 @@ from webapp2_extras import jinja2 as webapp2_jinja2
 from utils import *
 from routes import *
 from handlers import *
+from config import *
 
 
 class WSGIApplication(webapp2.WSGIApplication):
