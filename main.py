@@ -16,9 +16,9 @@ IS_DEVELOPMENT = not IS_GOOGLE
 WWW_HOST = "www.versapp.net"
 CDN1_HOST = "cdn1.versapp.net"
 CDN2_HOST = "cdn2.versapp.net"
-PAGES_CC = versapp.CC_PUBLIC(max_age=versapp.day) if IS_GOOGLE else versapp.CC_NO_CACHE
-DEFAULT_CC = versapp.CC_PUBLIC(max_age=versapp.year) if IS_GOOGLE else versapp.CC_NO_CACHE
-TEMPLATES_PATH = versapp.DEFAULT_TEMPLATES_PATH
+PAGES_CC = versapp.CC_PUBLIC(max_age=versapp.day) if IS_GOOGLE else versapp.config.CC_NO_CACHE
+DEFAULT_CC = versapp.CC_PUBLIC(max_age=versapp.year) if IS_GOOGLE else versapp.config.CC_NO_CACHE
+TEMPLATES_PATH = versapp.config.DEFAULT_TEMPLATES_PATH
 
 def get_model(id):
 	# logging.error(id)
@@ -36,7 +36,7 @@ app = versapp.initialize(template_path=TEMPLATES_PATH, debug=IS_DEVELOPMENT, tem
 
 def add_html_template_routes(routes):
 	# we walk default language files
-	sources_path = os.path.join(TEMPLATES_PATH, os.path.join(versapp.DEFAULT_LANGUAGE, 'html'))
+	sources_path = os.path.join(TEMPLATES_PATH, os.path.join(versapp.config.DEFAULT_LANGUAGE, 'html'))
 	for path in tree_paths(sources_path):
 		if not path.endswith('.html'):
 			continue
@@ -88,8 +88,8 @@ for r in routes:
 
 
 
-def main():
-	app.run()
+# def main():
+# 	app.run()
 
-if __name__ == '__main__':
-	main()
+# if __name__ == '__main__':
+# 	main()
